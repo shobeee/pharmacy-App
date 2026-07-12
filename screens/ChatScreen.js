@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, 
-  Alert, ActivityIndicator, Platform, Keyboard
+  Alert, ActivityIndicator, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
@@ -20,18 +20,11 @@ export default function ChatScreen({ route, navigation }) {
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const flatListRef = useRef(null);
 
   const insets = useSafeAreaInsets();
 
   const isAdmin = user?.role === 'admin' || user?.email === 'shoaib@developer.com';
-
-  useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', e => setKeyboardHeight(e.endCoordinates.height));
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
-    return () => { showSub.remove(); hideSub.remove(); };
-  }, []);
 
   useEffect(() => {
     const clearNotifications = async () => {
@@ -174,96 +167,99 @@ export default function ChatScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={i => i.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="chatbubble-ellipses-outline" size={40} color="#CCC" />
-            </View>
-            <Text style={styles.emptyTitle}>No messages yet</Text>
-            <Text style={styles.emptySub}>Start the conversation about this order</Text>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <>
-            {shouldShowDate(item, index) && (
-              <View style={styles.dateSep}>
-                <Text style={styles.dateSepText}>{formatDate(item.createdAt)}</Text>
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : insets.top + 52}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={i => i.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          style={{ flex: 1 }}
+          ListEmptyComponent={
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="chatbubble-ellipses-outline" size={40} color="#CCC" />
               </View>
-            )}
-            <View style={[
-              styles.msgWrap,
-              item.senderId === user.uid ? styles.myMsgWrap : styles.theirMsgWrap
-            ]}>
-              {item.senderId !== user.uid && (
-                <View style={[styles.senderBadge, isAdmin ? styles.adminBadge : styles.customerBadge]}>
-                  <Text style={styles.senderBadgeText}>
-                    {item.senderRole === 'admin' ? 'Admin' : 'Customer'}
-                  </Text>
+              <Text style={styles.emptyTitle}>No messages yet</Text>
+              <Text style={styles.emptySub}>Start the conversation about this order</Text>
+            </View>
+          }
+          renderItem={({ item, index }) => (
+            <>
+              {shouldShowDate(item, index) && (
+                <View style={styles.dateSep}>
+                  <Text style={styles.dateSepText}>{formatDate(item.createdAt)}</Text>
                 </View>
               )}
               <View style={[
-                styles.msg,
-                item.senderId === user.uid ? styles.myMsg : styles.theirMsg
+                styles.msgWrap,
+                item.senderId === user.uid ? styles.myMsgWrap : styles.theirMsgWrap
               ]}>
-                <Text style={item.senderId === user.uid ? styles.myText : styles.theirText}>
-                  {item.text}
-                </Text>
-                <View style={styles.msgFooter}>
-                  <Text style={item.senderId === user.uid ? styles.myTime : styles.theirTime}>
-                    {formatTime(item.createdAt)}
+                {item.senderId !== user.uid && (
+                  <View style={[styles.senderBadge, isAdmin ? styles.adminBadge : styles.customerBadge]}>
+                    <Text style={styles.senderBadgeText}>
+                      {item.senderRole === 'admin' ? 'Admin' : 'Customer'}
+                    </Text>
+                  </View>
+                )}
+                <View style={[
+                  styles.msg,
+                  item.senderId === user.uid ? styles.myMsg : styles.theirMsg
+                ]}>
+                  <Text style={item.senderId === user.uid ? styles.myText : styles.theirText}>
+                    {item.text}
                   </Text>
-                  {item.senderId === user.uid && (
-                    <Ionicons 
-                      name={item.read ? "checkmark-done" : "checkmark"} 
-                      size={14} 
-                      color={item.read ? "#81D4FA" : "#90A4AE"} 
-                      style={{ marginLeft: 4 }}
-                    />
-                  )}
+                  <View style={styles.msgFooter}>
+                    <Text style={item.senderId === user.uid ? styles.myTime : styles.theirTime}>
+                      {formatTime(item.createdAt)}
+                    </Text>
+                    {item.senderId === user.uid && (
+                      <Ionicons 
+                        name={item.read ? "checkmark-done" : "checkmark"} 
+                        size={14} 
+                        color={item.read ? "#81D4FA" : "#90A4AE"} 
+                        style={{ marginLeft: 4 }}
+                      />
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          </>
-        )}
-      />
-
-      <View style={[
-        styles.inputContainer,
-        { paddingBottom: Math.max(keyboardHeight, insets.bottom) }
-      ]}>
-        <TextInput
-          style={styles.input}
-          value={text}
-          onChangeText={setText}
-          placeholder="Type a message..."
-          placeholderTextColor="#B0B8B4"
-          multiline
-          maxLength={500}
-          onSubmitEditing={() => { if (text.trim()) sendMessage(); }}
-          returnKeyType="send"
-          blurOnSubmit
-        />
-        <TouchableOpacity 
-          style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]} 
-          onPress={sendMessage} 
-          disabled={isSending || !text.trim()}
-          activeOpacity={0.8}
-        >
-          {isSending ? (
-            <ActivityIndicator color="#FFF" size="small" />
-          ) : (
-            <Ionicons name="send" size={18} color="#FFF" />
+            </>
           )}
-        </TouchableOpacity>
-      </View>
+        />
+
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom }]}>
+          <TextInput
+            style={styles.input}
+            value={text}
+            onChangeText={setText}
+            placeholder="Type a message..."
+            placeholderTextColor="#B0B8B4"
+            multiline
+            maxLength={500}
+            onSubmitEditing={() => { if (text.trim()) sendMessage(); }}
+            returnKeyType="send"
+            blurOnSubmit
+          />
+          <TouchableOpacity 
+            style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]} 
+            onPress={sendMessage} 
+            disabled={isSending || !text.trim()}
+            activeOpacity={0.8}
+          >
+            {isSending ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <Ionicons name="send" size={18} color="#FFF" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
