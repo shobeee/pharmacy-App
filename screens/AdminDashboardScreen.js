@@ -103,6 +103,34 @@ export default function AdminDashboardScreen({ navigation }) {
     catch (error) { Alert.alert("Error", "Could not update status."); }
   };
 
+  const totalAmount = (ordersList) => ordersList.reduce((s, o) => s + Number(o.totalAmount || 0), 0);
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const sevenDaysAgo = new Date(todayStart);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const getOrderDate = (o) => {
+    const d = o.createdAt;
+    if (!d) return null;
+    const ts = d.seconds ? d.seconds * 1000 : (typeof d === 'string' ? Date.parse(d) : d);
+    return new Date(ts);
+  };
+
+  const isSameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+  const todayOrders = allOrders.filter(o => { const d = getOrderDate(o); return d && isSameDay(d, todayStart); });
+  const yesterdayOrders = allOrders.filter(o => { const d = getOrderDate(o); return d && isSameDay(d, yesterdayStart); });
+  const weekOrders = allOrders.filter(o => { const d = getOrderDate(o); return d && d >= sevenDaysAgo && d <= now; });
+  const monthOrders = allOrders.filter(o => { const d = getOrderDate(o); return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+
+  const todayEarning = totalAmount(todayOrders);
+  const yesterdayEarning = totalAmount(yesterdayOrders);
+  const weekEarning = totalAmount(weekOrders);
+  const monthEarning = totalAmount(monthOrders);
+
   return (
     <View style={styles.container}>
       <View style={styles.adminHeader}>
@@ -113,6 +141,25 @@ export default function AdminDashboardScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.navigate('ChangeCredentials')}>
           <Text style={styles.changeCredText}>⚙️ Settings</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.earningRow}>
+        <View style={[styles.earningCard, { backgroundColor: '#E8F5E9' }]}>
+          <Text style={styles.earningLabel}>Today</Text>
+          <Text style={styles.earningValue}>{CONFIG.CURRENCY} {todayEarning.toFixed(2)}</Text>
+        </View>
+        <View style={[styles.earningCard, { backgroundColor: '#FFF3E0' }]}>
+          <Text style={styles.earningLabel}>Yesterday</Text>
+          <Text style={styles.earningValue}>{CONFIG.CURRENCY} {yesterdayEarning.toFixed(2)}</Text>
+        </View>
+        <View style={[styles.earningCard, { backgroundColor: '#E3F2FD' }]}>
+          <Text style={styles.earningLabel}>Last 7 Days</Text>
+          <Text style={styles.earningValue}>{CONFIG.CURRENCY} {weekEarning.toFixed(2)}</Text>
+        </View>
+        <View style={[styles.earningCard, { backgroundColor: '#F3E5F5' }]}>
+          <Text style={styles.earningLabel}>This Month</Text>
+          <Text style={styles.earningValue}>{CONFIG.CURRENCY} {monthEarning.toFixed(2)}</Text>
+        </View>
       </View>
       
       <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddItemScreen')}>
@@ -334,6 +381,10 @@ const styles = StyleSheet.create({
   adminTitle: { color: '#FFF', fontSize: 24, fontWeight: '800' },
   subTitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 },
   changeCredText: { color: 'rgba(255,255,255,0.7)', marginTop: 10 },
+  earningRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border, gap: 6 },
+  earningCard: { flex: 1, padding: 8, borderRadius: 10, alignItems: 'center' },
+  earningLabel: { fontSize: 9, fontWeight: '600', color: '#555', marginBottom: 2 },
+  earningValue: { fontSize: 12, fontWeight: '800', color: '#222' },
   summaryRow: { flexDirection: 'row', marginHorizontal: 15, marginBottom: 10, gap: 8 },
   summaryCard: { flex: 1, padding: 12, borderRadius: 12, alignItems: 'center' },
   summaryLabel: { fontSize: 10, fontWeight: '600', color: '#666', marginBottom: 4 },
