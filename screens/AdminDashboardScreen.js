@@ -163,6 +163,7 @@ export default function AdminDashboardScreen({ navigation }) {
               </View>
             </View>
           )} />
+          </>
         ) : tab === 'users' ? (
           <>
           <View style={styles.summaryRow}>
@@ -205,8 +206,8 @@ export default function AdminDashboardScreen({ navigation }) {
               </TouchableOpacity>
             </TouchableOpacity>
           )} />
-        ) : (
-          {tab === 'history' ? (
+          </>
+        ) : tab === 'history' ? (
             <>
               <View style={styles.summaryRow}>
                 <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
@@ -305,9 +306,9 @@ export default function AdminDashboardScreen({ navigation }) {
             rightOpenValue={-75} 
           />
           </>
-          )}
         )
-      )}
+      )
+    }
       
       <Modal visible={!!selectedUser} transparent animationType="slide">
         <View style={styles.modalOverlay}>
