@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { auth, db } from './firebaseConfig'; // If in root, ensure it's up one level correctly
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -28,9 +28,24 @@ useEffect(() => {
   useEffect(() => {
     if (IS_BYPASS_ENABLED) return;
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false); // Signal that auth check is complete
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const [adminSnap, masterSnap] = await Promise.all([
+            getDoc(doc(db, "SystemAccess", "AdminUser")),
+            getDoc(doc(db, "SystemAccess", "MasterAdmin"))
+          ]);
+          const email = firebaseUser.email;
+          const isAdmin = (adminSnap.exists() && adminSnap.data().email === email) ||
+                          (masterSnap.exists() && masterSnap.data().email === email);
+          setUser({ ...firebaseUser, role: isAdmin ? 'admin' : 'customer' });
+        } catch {
+          setUser(firebaseUser);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
     });
     return unsubscribe;
   }, []);

@@ -89,6 +89,11 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.pharmacyName}>{currentPharmacyConfig?.name || 'Pharmacy'}</Text>
         </View>
         <View style={styles.headerRight}>
+          {user?.role === 'admin' && (
+            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: '#E8F5E9' }]} onPress={() => navigation.navigate('AdminDashboard')}>
+              <Text style={styles.iconText}>⚙️</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('OrderHistory')}>
             <Text style={styles.iconText}>📋</Text>
           </TouchableOpacity>
