@@ -148,14 +148,17 @@ export default function CheckoutScreen({ navigation }) {
         tokenSnap.forEach(tDoc => {
           const token = tDoc.data().pushToken;
           if (token) {
-            fetch(`${CONFIG.PAYMENT_SERVER_URL}/send-notification`, {
+            fetch("https://exp.host/--/api/v2/push/send", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                pushToken: token,
+                to: token,
                 title: "🔔 New Order!",
                 body: `${orderData.customerName} placed an order of ${CONFIG.CURRENCY} ${Number(orderData.totalAmount).toFixed(2)}`,
                 data: { type: "new_order", orderId: docRef.id },
+                priority: "high",
+                channelId: "order-ring",
+                sound: "default",
               }),
             }).catch(() => {});
           }
