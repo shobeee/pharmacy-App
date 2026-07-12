@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, 
-  Alert, ActivityIndicator, Platform
+  Alert, ActivityIndicator, Keyboard
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   collection, addDoc, query, orderBy, onSnapshot, 
   serverTimestamp, writeBatch, getDocs, doc, setDoc
@@ -20,9 +20,16 @@ export default function ChatScreen({ route, navigation }) {
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [kbHeight, setKbHeight] = useState(0);
   const flatListRef = useRef(null);
 
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', e => setKbHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const isAdmin = user?.role === 'admin' || user?.email === 'shoaib@developer.com';
 
@@ -145,15 +152,15 @@ export default function ChatScreen({ route, navigation }) {
 
   if (!user || !orderId) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', paddingTop: insets.top }]}>
         <Ionicons name="chatbubble-ellipses-outline" size={48} color="#DDD" />
         <Text style={{ color: '#999', marginTop: 12 }}>Chat not available</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
@@ -167,7 +174,7 @@ export default function ChatScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, marginBottom: kbHeight }}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -176,6 +183,7 @@ export default function ChatScreen({ route, navigation }) {
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
@@ -256,7 +264,7 @@ export default function ChatScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
