@@ -159,8 +159,6 @@ export default function ChatScreen({ route, navigation }) {
     );
   }
 
-  const bottomInset = Math.max(insets.bottom, 6);
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -183,7 +181,7 @@ export default function ChatScreen({ route, navigation }) {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        style={{ marginBottom: keyboardHeight || bottomInset }}
+        style={{ flex: 1 }}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <View style={styles.emptyIcon}>
@@ -239,7 +237,7 @@ export default function ChatScreen({ route, navigation }) {
 
       <View style={[
         styles.inputContainer,
-        { paddingBottom: keyboardHeight ? 6 : bottomInset }
+        { paddingBottom: Math.max(keyboardHeight, insets.bottom) }
       ]}>
         <TextInput
           style={styles.input}
