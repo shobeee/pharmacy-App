@@ -5,6 +5,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import * as Notifications from 'expo-notifications';
+import { setDoc, doc } from 'firebase/firestore';
+import { db } from './firebaseConfig';
+import { getAuth } from 'firebase/auth';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import ChangeCredentialsScreen from './screens/ChangeCredentialsScreen';
 import AddItemScreen from './screens/AddItemScreen';
@@ -56,6 +68,47 @@ function useAndroidBackHandler() {
   }, []);
 }
 
+function useNotificationsSetup() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const setup = async () => {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('order-ring', {
+          name: 'Order Ringing',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [1000, 500, 1000, 500],
+          lightColor: '#FF9800',
+          sound: 'default',
+          bypassDnd: true,
+        });
+      }
+
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') return;
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: '43ce51a9-9a31-4b99-bc03-4814d127592d',
+      });
+      const pushToken = tokenData.data;
+
+      try {
+        await setDoc(doc(db, "AdminDeviceTokens", user.uid), {
+          pushToken,
+          email: user.email,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+      } catch (e) {
+        console.error("Failed to store push token:", e);
+      }
+    };
+
+    setup();
+  }, [user?.uid]);
+}
+
 function NavigationTree() {
   const auth = useAuth();
   if (!auth) return null;
@@ -98,6 +151,18 @@ function NavigationTree() {
 
 function AppContent() {
   useAndroidBackHandler();
+  useNotificationsSetup();
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (data?.orderId && navigationRef.current) {
+        navigationRef.current.navigate('OrderDetails', { orderId: data.orderId });
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   return <NavigationTree />;
 }
 

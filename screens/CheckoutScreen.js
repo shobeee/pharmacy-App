@@ -8,7 +8,7 @@ import { COLORS } from '../theme';
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
 import { CONFIG } from '../config';
-import { collection, addDoc, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, getDocs, query, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export default function CheckoutScreen({ navigation }) {
@@ -142,6 +142,26 @@ export default function CheckoutScreen({ navigation }) {
 
       const docRef = await addDoc(collection(db, "Orders"), orderData);
       clearCart();
+
+      try {
+        const tokenSnap = await getDocs(query(collection(db, "AdminDeviceTokens")));
+        tokenSnap.forEach(tDoc => {
+          const token = tDoc.data().pushToken;
+          if (token) {
+            fetch(`${CONFIG.PAYMENT_SERVER_URL}/send-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                pushToken: token,
+                title: "🔔 New Order!",
+                body: `${orderData.customerName} placed an order of ${CONFIG.CURRENCY} ${Number(orderData.totalAmount).toFixed(2)}`,
+                data: { type: "new_order", orderId: docRef.id },
+              }),
+            }).catch(() => {});
+          }
+        });
+      } catch (e) {}
+
       setLoading(false);
 
       Alert.alert('Order Confirmed!', paymentMethod === 'CARD'
