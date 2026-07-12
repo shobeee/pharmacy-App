@@ -1,11 +1,12 @@
 // ============================================================
-// appConfig.js — One file to transform this app for any business
+// appConfig.js — ONE FILE to transform this app for any business
 // ============================================================
-// Change BUSINESS_TYPE and everything below to rebrand entirely.
-// Supported: 'pharmacy' | 'electronics' | 'boutique' | 'general' | 'grocery'
+// 1. Change BUSINESS_TYPE to pick a preset, OR
+// 2. Set USE_CUSTOM = true and fill in everything below
 // ============================================================
 
 const BUSINESS_TYPE = 'pharmacy';
+const USE_CUSTOM = false;  // set true to ignore presets and use your own values below
 
 // ---------------------------------------------------------------------------
 // Per‑business presets
@@ -143,9 +144,61 @@ const PRESETS = {
 };
 
 // ---------------------------------------------------------------------------
+// Custom override — fill this in when USE_CUSTOM = true
+// ---------------------------------------------------------------------------
+const CUSTOM = {
+  name: 'My Store',
+  tagline: 'Welcome',
+  emoji: '🛍️',
+  icon: 'storefront-outline',
+
+  colors: {
+    primary: '#2E7D32',
+    secondary: '#81C784',
+    background: '#F5F7F6',
+    surface: '#FFFFFF',
+    textPrimary: '#1C2A22',
+    textSecondary: '#66756C',
+    border: '#E0E5E2',
+  },
+
+  currency: 'PKR',
+  categories: ['All', 'Category 1', 'Category 2', 'Category 3'],
+  statusSteps: ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'],
+  trackingSteps: [
+    { title: 'Order Placed',     desc: 'Your order has been received.',       icon: 'receipt-outline' },
+    { title: 'Confirmed',        desc: 'Your order is confirmed.',             icon: 'checkmark-circle-outline' },
+    { title: 'Processing',       desc: 'Your items are being prepared.',       icon: 'cube-outline' },
+    { title: 'Out for Delivery', desc: 'Your package is on its way.',          icon: 'bicycle-outline' },
+    { title: 'Completed',        desc: 'Delivered successfully.',              icon: 'checkmark-done-circle-outline' },
+  ],
+
+  // ── Firebase ──────────────────────────────────────────────
+  firebase: {
+    apiKey: 'YOUR_API_KEY',
+    authDomain: 'YOUR_PROJECT.firebaseapp.com',
+    projectId: 'YOUR_PROJECT',
+    storageBucket: 'YOUR_PROJECT.firebasestorage.app',
+    messagingSenderId: 'YOUR_SENDER_ID',
+    appId: 'YOUR_APP_ID',
+    measurementId: 'YOUR_MEASUREMENT_ID',
+  },
+
+  // ── Firestore collection names ────────────────────────────
+  collections: {
+    Orders: 'Orders',
+    Products: 'Products',
+    Users: 'Users',
+    SystemAccess: 'SystemAccess',
+    AdminDeviceTokens: 'AdminDeviceTokens',
+    AppConfig: 'AppConfig',
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Resolve current preset
 // ---------------------------------------------------------------------------
-const preset = PRESETS[BUSINESS_TYPE] || PRESETS.general;
+const preset = USE_CUSTOM ? CUSTOM : (PRESETS[BUSINESS_TYPE] || PRESETS.general);
 
 // ---------------------------------------------------------------------------
 // Exported config — import this everywhere instead of theme.js / config.js
@@ -166,6 +219,27 @@ export const APP_CONFIG = {
   categories: preset.categories,
   statusSteps: preset.statusSteps,
   trackingSteps: preset.trackingSteps,
+
+  // ── Firebase ──────────────────────────────────────────────
+  firebase: preset.firebase || {
+    apiKey: 'AIzaSyCTz6t5WMOgfoQ_gW2pxacG1xlcsGlMIJs',
+    authDomain: 'pharmacy-4514e.firebaseapp.com',
+    projectId: 'pharmacy-4514e',
+    storageBucket: 'pharmacy-4514e.firebasestorage.app',
+    messagingSenderId: '237683995708',
+    appId: '1:237683995708:web:43d9f905e7da88eb6b3f39',
+    measurementId: 'G-TBKSYLES9W',
+  },
+
+  // ── Firestore collection names ────────────────────────────
+  collections: preset.collections || {
+    Orders: 'Orders',
+    Products: 'Products',
+    Users: 'Users',
+    SystemAccess: 'SystemAccess',
+    AdminDeviceTokens: 'AdminDeviceTokens',
+    AppConfig: 'AppConfig',
+  },
 
   // ── Server ────────────────────────────────────────────────
   paymentServerUrl: 'https://cooperative-stillness-production-3194.up.railway.app',
