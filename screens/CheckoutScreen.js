@@ -349,9 +349,7 @@ export default function CheckoutScreen({ navigation }) {
               {!loading && <Ionicons name="cart" size={20} color="#FFF" style={{ marginRight: 6 }} />}
               <Text style={styles.placeOrderText}>Place Order</Text>
             </ButtonSpinner>
-                <Ionicons name="arrow-forward" size={20} color="#FFF" />
-              </>
-            )}
+            <Ionicons name="arrow-forward" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
       </View>
