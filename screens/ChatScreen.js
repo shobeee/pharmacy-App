@@ -229,7 +229,7 @@ export default function ChatScreen({ route, navigation }) {
           )}
         />
 
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom }]}>
+        <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
           <TextInput
             style={styles.input}
             value={text}
