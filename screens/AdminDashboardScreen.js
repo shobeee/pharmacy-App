@@ -155,7 +155,54 @@ export default function AdminDashboardScreen({ navigation }) {
             </TouchableOpacity>
           )} />
         ) : (
-          <>
+          {tab === 'history' ? (
+            <>
+              <View style={styles.summaryRow}>
+                <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
+                  <Text style={styles.summaryLabel}>Completed Orders</Text>
+                  <Text style={[styles.summaryValue, { color: '#2E7D32' }]}>{orders.length}</Text>
+                </View>
+                <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
+                  <Text style={styles.summaryLabel}>Amount Received</Text>
+                  <Text style={[styles.summaryValue, { color: '#2E7D32' }]}>{CONFIG.CURRENCY} {orders.reduce((s, o) => s + Number(o.totalAmount || 0), 0).toFixed(2)}</Text>
+                </View>
+              </View>
+              <FlatList
+                data={orders}
+                keyExtractor={(i) => i.id}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                renderItem={({ item }) => {
+                  const date = item.createdAt
+                    ? new Date(item.createdAt.seconds ? item.createdAt.seconds * 1000 : item.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '—';
+                  const itemsCount = item.items?.length || 0;
+                  return (
+                    <TouchableOpacity style={styles.historyCard} onPress={() => navigation.navigate('OrderDetails', { orderId: item.id })}>
+                      <View style={styles.historyTop}>
+                        <View style={styles.historyIdRow}>
+                          <Text style={styles.historyId}>#{item.id?.slice(-8).toUpperCase()}</Text>
+                          <Text style={styles.historyDate}>{date}</Text>
+                        </View>
+                        <View style={styles.paidBadge}>
+                          <Text style={styles.paidBadgeText}>Paid</Text>
+                        </View>
+                      </View>
+                      <View style={styles.historyMid}>
+                        <Text style={styles.historyCustomer}>{item.customerName || 'Guest'}</Text>
+                        <Text style={styles.historyItems}>{itemsCount} item{itemsCount !== 1 ? 's' : ''}</Text>
+                      </View>
+                      <View style={styles.historyBottom}>
+                        <Text style={styles.historyAmount}>{CONFIG.CURRENCY} {Number(item.totalAmount || 0).toFixed(2)}</Text>
+                        <Text style={styles.historyPayment}>{item.paymentMethod || 'COD'}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40, color: '#999' }}>No completed orders yet.</Text>}
+              />
+            </>
+          ) : (
+            <>
             <View style={styles.summaryRow}>
               <View style={[styles.summaryCard, { backgroundColor: '#FFF3E0' }]}>
                 <Text style={styles.summaryLabel}>Pending Orders</Text>
@@ -207,6 +254,7 @@ export default function AdminDashboardScreen({ navigation }) {
             rightOpenValue={-75} 
           />
           </>
+          )}
         )
       )}
       
@@ -261,6 +309,19 @@ const styles = StyleSheet.create({
   price: { fontWeight: 'bold', fontSize: 15, marginTop: 5 },
   proceedBtn: { marginTop: 10, backgroundColor: COLORS.primary, padding: 8, borderRadius: 8, alignItems: 'center' },
   proceedBtnText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  historyCard: { backgroundColor: '#FFF', marginHorizontal: 15, marginBottom: 10, borderRadius: 14, padding: 16, elevation: 1, borderLeftWidth: 4, borderLeftColor: '#4CAF50' },
+  historyTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  historyIdRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  historyId: { fontSize: 13, fontWeight: '700', color: '#333' },
+  historyDate: { fontSize: 11, color: '#999' },
+  paidBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 },
+  paidBadgeText: { fontSize: 10, fontWeight: '700', color: '#2E7D32' },
+  historyMid: { marginBottom: 8 },
+  historyCustomer: { fontSize: 15, fontWeight: '600', color: '#222' },
+  historyItems: { fontSize: 12, color: '#888', marginTop: 2 },
+  historyBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F0F0F0', paddingTop: 8 },
+  historyAmount: { fontSize: 16, fontWeight: '800', color: COLORS.primary },
+  historyPayment: { fontSize: 11, color: '#666', backgroundColor: '#F5F5F5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
   rowBack: { marginHorizontal: 15, marginBottom: 10, flex: 1, justifyContent: 'center', alignItems: 'flex-end', backgroundColor: '#FF5252', borderRadius: 12 },
   deleteButton: { padding: 20 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
