@@ -9,10 +9,10 @@ import { CONFIG } from '../config';
 
 const TRACKING_STEPS = [
   { level: 1, title: 'Order Placed', desc: 'Your order has been received by the pharmacy.', icon: 'receipt-outline' },
-  { level: 2, title: 'Pharmacist Review', desc: 'Verifying inventory and prescriptions.', icon: 'medkit-outline' },
-  { level: 3, title: 'Packed & Dispatched', desc: 'Securely packaged and handed to courier.', icon: 'cube-outline' },
+  { level: 2, title: 'Confirmed', desc: 'The pharmacy has reviewed and confirmed your order.', icon: 'checkmark-circle-outline' },
+  { level: 3, title: 'Processing', desc: 'Your items are being prepared.', icon: 'cube-outline' },
   { level: 4, title: 'Out for Delivery', desc: 'Your package is on its way to you.', icon: 'bicycle-outline' },
-  { level: 5, title: 'Delivered', desc: 'Package delivered successfully.', icon: 'checkmark-done-circle-outline' },
+  { level: 5, title: 'Completed', desc: 'Package delivered successfully.', icon: 'checkmark-done-circle-outline' },
 ];
 
 const STATUS_COLORS = {
@@ -37,10 +37,11 @@ export default function OrderTrackingScreen({ route, navigation }) {
   const getStepFromStatus = (status) => {
     if (!status) return 1;
     const s = status.toString().toLowerCase().trim();
-    if (s.includes('delivered')) return 5;
-    if (s.includes('out') || s.includes('delivery')) return 4;
-    if (s.includes('packed') || s.includes('dispatched') || s.includes('shipped')) return 3;
-    if (s.includes('confirmed') || s.includes('processing') || s.includes('review')) return 2;
+    if (s.includes('completed') || s.includes('delivered')) return 5;
+    if (s.includes('out for delivery')) return 4;
+    if (s.includes('processing')) return 3;
+    if (s.includes('confirmed')) return 2;
+    if (s.includes('order placed')) return 1;
     return 1;
   };
 
@@ -171,7 +172,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
     : 'N/A';
 
   const estimatedDelivery = (() => {
-    if (isCompleted) return 'Delivered';
+    if (isCompleted) return 'Completed';
     const days = Math.max(1, 4 - currentStep);
     if (days === 1) return 'Today';
     return `In ${days} days`;
@@ -203,10 +204,10 @@ export default function OrderTrackingScreen({ route, navigation }) {
             <View style={[styles.statusDot, { backgroundColor: statusColors.dot }]} />
             <View style={styles.statusTextContainer}>
               <Text style={[styles.statusLabel, { color: statusColors.text }]}>
-                {TRACKING_STEPS[Math.min(currentStep, TRACKING_STEPS.length) - 1]?.title || 'Delivered'}
+                {TRACKING_STEPS[Math.min(currentStep, TRACKING_STEPS.length) - 1]?.title || 'Completed'}
               </Text>
               <Text style={[styles.statusDesc, { color: statusColors.text }]}>
-                {estimatedDelivery === 'Delivered' ? 'Package delivered successfully' : `Estimated delivery: ${estimatedDelivery}`}
+                {estimatedDelivery === 'Completed' ? 'Order completed successfully' : `Estimated delivery: ${estimatedDelivery}`}
               </Text>
             </View>
             {currentStep < 5 && (
