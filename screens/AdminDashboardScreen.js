@@ -337,8 +337,8 @@ export default function AdminDashboardScreen({ navigation }) {
                 </TouchableOpacity>
                 
                 {item.status !== 'Completed' && (
-                  <TouchableOpacity style={styles.proceedBtn} onPress={() => proceedOrder(item.id, item.status)}>
-                    <Text style={styles.proceedBtnText}>Next Step</Text>
+                  <TouchableOpacity style={styles.proceedBtn} onPress={() => proceedOrder(item.id, item.status)} activeOpacity={0.8}>
+                    <Text style={styles.proceedBtnText}>→ {STATUS_STEPS[STATUS_STEPS.indexOf(item.status) + 1]?.toUpperCase()}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -410,8 +410,8 @@ const styles = StyleSheet.create({
   pill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   customerName: { fontSize: 16, fontWeight: '600' },
   price: { fontWeight: 'bold', fontSize: 15, marginTop: 5 },
-  proceedBtn: { marginTop: 10, backgroundColor: COLORS.primary, padding: 8, borderRadius: 8, alignItems: 'center' },
-  proceedBtnText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  proceedBtn: { marginTop: 10, backgroundColor: COLORS.primary, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 24, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
+  proceedBtnText: { color: '#FFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
   productCard: { backgroundColor: '#FFF', marginHorizontal: 15, marginBottom: 10, borderRadius: 14, padding: 12, elevation: 1, flexDirection: 'row', alignItems: 'center' },
   productCardImg: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#F0F2F1' },
   productCardInfo: { flex: 1, marginLeft: 12 },
