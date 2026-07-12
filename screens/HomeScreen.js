@@ -3,7 +3,8 @@ import { StyleSheet, Text, View, FlatList, TextInput, Image, TouchableOpacity, A
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; 
-import { COLORS, currentPharmacyConfig } from '../theme';
+import { COLORS } from '../theme';
+import { APP_CONFIG, currentPharmacyConfig } from '../appConfig';
 import { useCart } from '../CartContext'; 
 import { useAuth } from '../AuthContext'; 
 import { CONFIG } from '../config';
@@ -11,19 +12,23 @@ import { PulseLoader, ProductGridSkeleton } from '../components/LoadingAnimation
 
 const { width } = Dimensions.get('window');
 
-const CategoryIcons = {
-  'All': '💊',
-  'Tablets': '💊',
-  'Syrups': '🧴',
-  'Injections': '💉',
-  'Drops': '🩺',
-  'Capsules': '💊',
-  'Ointments': '🧴',
+const getCategoryIcon = (cat) => {
+  const icons = {
+    'All': APP_CONFIG.emoji,
+    'Tablets': '💊', 'Syrups': '🧴', 'Injections': '💉', 'Drops': '🩺',
+    'Capsules': '💊', 'Ointments': '🧴',
+    'Mobiles': '📱', 'Laptops': '💻', 'Audio': '🎧', 'Accessories': '🔌', 'Home Appliances': '🏠', 'Gaming': '🎮',
+    'Dresses': '👗', 'Tops': '👚', 'Bottoms': '👖', 'Footwear': '👟',
+    'Clothing': '👕', 'Home': '🏡', 'Groceries': '🛒', 'Toys': '🧸', 'Stationery': '📝',
+    'Fruits': '🍎', 'Vegetables': '🥬', 'Dairy': '🥛', 'Bakery': '🥖', 'Beverages': '🥤', 'Snacks': '🍿',
+    'Electronics': '📱',
+  };
+  return icons[cat] || '📦';
 };
 
 const BANNERS = [
-  { id: '1', title: 'Free Delivery', subtitle: 'On orders above PKR 500', color: '#1B5E20' },
-  { id: '2', title: 'New Arrivals', subtitle: 'Check out latest products', color: '#2E7D32' },
+  { id: '1', title: 'Free Delivery', subtitle: `On orders above ${APP_CONFIG.currency} 500`, color: APP_CONFIG.colors.primary },
+  { id: '2', title: 'New Arrivals', subtitle: 'Check out latest products', color: APP_CONFIG.colors.secondary },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -55,7 +60,7 @@ export default function HomeScreen({ navigation }) {
     return matchesCategory && matchesSearch;
   });
 
-  const categories = ['All', ...new Set(products.map(p => p.category || 'Uncategorized'))];
+  const categories = APP_CONFIG.categories;
 
   const handleAddToCart = (item) => {
     addToCart(item, 1);
@@ -89,7 +94,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.headerTopRow}>
         <View style={styles.headerLeft}>
           <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.pharmacyName}>{currentPharmacyConfig?.name || 'Pharmacy'}</Text>
+          <Text style={styles.pharmacyName}>{APP_CONFIG.name}</Text>
         </View>
         <View style={styles.headerRight}>
           {user?.role === 'admin' && (
@@ -153,7 +158,7 @@ export default function HomeScreen({ navigation }) {
               ]}
               onPress={() => setSelectedCategory(item)}
             >
-              <Text style={styles.categoryEmoji}>{CategoryIcons[item] || '💊'}</Text>
+              <Text style={styles.categoryEmoji}>{getCategoryIcon(item)}</Text>
               <Text style={[
                 styles.categoryText, 
                 selectedCategory === item && styles.categoryTextActive

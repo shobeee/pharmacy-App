@@ -8,8 +8,9 @@ import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { COLORS } from '../theme';
 import { CONFIG } from '../config';
+import { APP_CONFIG } from '../appConfig';
 
-const QUICK_CATEGORIES = ['Tablets', 'Syrups', 'Injections', 'Drops', 'Capsules', 'Ointments'];
+const QUICK_CATEGORIES = APP_CONFIG.categories.filter(c => c !== 'All');
 
 export default function AddItemScreen({ navigation, route }) {
   const editProduct = route?.params?.product;

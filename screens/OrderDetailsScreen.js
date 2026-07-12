@@ -8,8 +8,9 @@ import { CONFIG } from '../config';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../AuthContext';
 import { PulseLoader } from '../components/LoadingAnimation';
+import { APP_CONFIG } from '../appConfig';
 
-const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
+const STATUS_STEPS = APP_CONFIG.statusSteps;
 
 export default function OrderDetailsScreen({ route, navigation }) {
   const { orderId } = route?.params || {};

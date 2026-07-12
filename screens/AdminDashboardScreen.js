@@ -6,6 +6,7 @@ import { db } from '../firebaseConfig';
 import { COLORS } from '../theme';
 import { CONFIG } from '../config';
 import { PulseLoader } from '../components/LoadingAnimation';
+import { APP_CONFIG } from '../appConfig';
 
 export default function AdminDashboardScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -18,7 +19,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [productCount, setProductCount] = useState(0);
   const [allOrders, setAllOrders] = useState([]);
 
-  const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
+  const STATUS_STEPS = APP_CONFIG.statusSteps;
   const [pendingAlarm, setPendingAlarm] = useState([]);
   const [dismissedLowStock, setDismissedLowStock] = useState([]);
 

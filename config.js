@@ -1,5 +1,6 @@
-// config.js
+// config.js — Re‑exports from appConfig.js for convenience
+import { APP_CONFIG } from './appConfig';
 export const CONFIG = {
-  CURRENCY: "PKR",
-  PAYMENT_SERVER_URL: "https://cooperative-stillness-production-3194.up.railway.app",
+  CURRENCY: APP_CONFIG.currency,
+  PAYMENT_SERVER_URL: APP_CONFIG.paymentServerUrl,
 };

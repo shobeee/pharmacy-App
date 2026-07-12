@@ -7,14 +7,9 @@ import { PulseLoader } from '../components/LoadingAnimation';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { CONFIG } from '../config';
+import { APP_CONFIG } from '../appConfig';
 
-const TRACKING_STEPS = [
-  { level: 1, title: 'Order Placed', desc: 'Your order has been received by the pharmacy.', icon: 'receipt-outline' },
-  { level: 2, title: 'Confirmed', desc: 'The pharmacy has reviewed and confirmed your order.', icon: 'checkmark-circle-outline' },
-  { level: 3, title: 'Processing', desc: 'Your items are being prepared.', icon: 'cube-outline' },
-  { level: 4, title: 'Out for Delivery', desc: 'Your package is on its way to you.', icon: 'bicycle-outline' },
-  { level: 5, title: 'Completed', desc: 'Package delivered successfully.', icon: 'checkmark-done-circle-outline' },
-];
+const TRACKING_STEPS = APP_CONFIG.trackingSteps.map((s, i) => ({ ...s, level: i + 1 }));
 
 const STATUS_COLORS = {
   1: { bg: '#FFF3E0', text: '#E65100', dot: '#FF9800' },
