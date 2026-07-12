@@ -3,7 +3,7 @@ import {
   View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, 
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   collection, addDoc, query, orderBy, onSnapshot, 
   serverTimestamp, writeBatch, getDocs, doc, setDoc
@@ -21,6 +21,8 @@ export default function ChatScreen({ route, navigation }) {
   const [isSending, setIsSending] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const flatListRef = useRef(null);
+
+  const insets = useSafeAreaInsets();
 
   const isAdmin = user?.role === 'admin' || user?.email === 'shoaib@developer.com';
 
@@ -168,7 +170,7 @@ export default function ChatScreen({ route, navigation }) {
       <KeyboardAvoidingView 
         style={styles.flex} 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : insets.bottom}
       >
         <FlatList
           ref={flatListRef}
@@ -230,7 +232,7 @@ export default function ChatScreen({ route, navigation }) {
           )}
         />
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 10) }]}>
           <TextInput
             style={styles.input}
             value={text}
