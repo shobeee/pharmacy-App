@@ -71,6 +71,11 @@ export default function CheckoutScreen({ navigation }) {
       return;
     }
 
+    if (cartTotal < 500) {
+      Alert.alert('Minimum Order', `Minimum order amount is ${CONFIG.CURRENCY} 500. Your total is ${CONFIG.CURRENCY} ${cartTotal.toFixed(2)}.`);
+      return;
+    }
+
     if (!name.trim() || !phone.trim() || !address.trim()) {
       Alert.alert('Missing Details', 'Please fill out all delivery fields.');
       return;
@@ -112,10 +117,7 @@ export default function CheckoutScreen({ navigation }) {
           }
         } catch (fnError) {
           setLoading(false);
-          Alert.alert(
-            'Card Payment Unavailable',
-            'Payment server is not deployed yet.\n\nDeploy the server first or use Cash on Delivery.'
-          );
+          Alert.alert('Card Unavailable', fnError.message);
           return;
         }
       }
