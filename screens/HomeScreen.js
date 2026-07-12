@@ -7,6 +7,7 @@ import { COLORS, currentPharmacyConfig } from '../theme';
 import { useCart } from '../CartContext'; 
 import { useAuth } from '../AuthContext'; 
 import { CONFIG } from '../config';
+import { PulseLoader, ProductGridSkeleton } from '../components/LoadingAnimation';
 
 const { width } = Dimensions.get('window');
 
@@ -70,13 +71,15 @@ export default function HomeScreen({ navigation }) {
     extrapolate: 'clamp',
   });
 
-  if (authLoading || loading) {
+  if (authLoading) {
+    return <PulseLoader message="Loading..." />;
+  }
+
+  if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-        <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-          <Text style={{ fontSize: 28 }}>💊</Text>
-        </View>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+        <View style={{ height: 120 }} />
+        <ProductGridSkeleton />
       </View>
     );
   }

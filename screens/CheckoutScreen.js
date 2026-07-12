@@ -8,6 +8,7 @@ import { COLORS } from '../theme';
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
 import { CONFIG } from '../config';
+import { PulseLoader, ButtonSpinner } from '../components/LoadingAnimation';
 import { collection, addDoc, doc, getDoc, getDocs, query, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
@@ -178,13 +179,7 @@ export default function CheckoutScreen({ navigation }) {
     }
   };
 
-  if (fetchingData) return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    </SafeAreaView>
-  );
+  if (fetchingData) return <PulseLoader message="Loading checkout..." />;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -350,11 +345,10 @@ export default function CheckoutScreen({ navigation }) {
             <Text style={styles.footerTotalValue}>{CONFIG.CURRENCY} {cartTotal.toFixed(2)}</Text>
           </View>
           <TouchableOpacity style={styles.placeOrderBtn} onPress={handlePlaceOrder} disabled={loading} activeOpacity={0.9}>
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <>
-                <Text style={styles.placeOrderText}>Place Order</Text>
+            <ButtonSpinner loading={loading}>
+              {!loading && <Ionicons name="cart" size={20} color="#FFF" style={{ marginRight: 6 }} />}
+              <Text style={styles.placeOrderText}>Place Order</Text>
+            </ButtonSpinner>
                 <Ionicons name="arrow-forward" size={20} color="#FFF" />
               </>
             )}

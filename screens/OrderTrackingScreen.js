@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert, Ani
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
+import { PulseLoader } from '../components/LoadingAnimation';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { CONFIG } from '../config';
@@ -154,16 +155,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
     }, 300);
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading tracking details...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (loading) return <PulseLoader message="Loading tracking details..." />;
 
   const orderDate = order?.createdAt
     ? new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleDateString('en-US', {

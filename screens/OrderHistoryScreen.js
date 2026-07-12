@@ -6,6 +6,7 @@ import { db } from '../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { COLORS } from '../theme';
 import { CONFIG } from '../config';
+import { PulseLoader } from '../components/LoadingAnimation';
 
 export default function OrderHistoryScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -53,7 +54,7 @@ export default function OrderHistoryScreen({ navigation }) {
   const totalOrders = orders.length;
   const totalSpent = orders.reduce((sum, item) => sum + (Number(item?.totalAmount) || 0), 0);
 
-  if (loading) return <ActivityIndicator size="large" color={COLORS.primary} style={{ flex: 1 }} />;
+  if (loading) return <PulseLoader message="Loading orders..." />;
 
   return (
     <SafeAreaView style={styles.container}>

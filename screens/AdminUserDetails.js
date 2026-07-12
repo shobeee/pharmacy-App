@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
+import { PulseLoader } from '../components/LoadingAnimation';
 
 export default function AdminUserDetails({ route, navigation }) {
   const { userId } = route.params || {};
@@ -21,7 +22,7 @@ export default function AdminUserDetails({ route, navigation }) {
     fetchUser();
   }, [userId]);
 
-  if (loading) return <ActivityIndicator size="large" color={COLORS.primary} style={{ flex: 1 }} />;
+  if (loading) return <PulseLoader message="Loading user..." />;
 
   return (
     <SafeAreaView style={styles.container}>

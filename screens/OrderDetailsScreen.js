@@ -7,6 +7,7 @@ import { COLORS } from '../theme';
 import { CONFIG } from '../config';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../AuthContext';
+import { PulseLoader } from '../components/LoadingAnimation';
 
 const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
 
@@ -53,13 +54,7 @@ export default function OrderDetailsScreen({ route, navigation }) {
     fetchOrder();
   }, [orderId, isAdmin]);
 
-  if (loading) return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    </SafeAreaView>
-  );
+  if (loading) return <PulseLoader message="Loading order..." />;
 
   if (!order) return (
     <SafeAreaView style={styles.container}>

@@ -5,6 +5,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { db } from '../firebaseConfig';
 import { COLORS } from '../theme';
 import { CONFIG } from '../config';
+import { PulseLoader } from '../components/LoadingAnimation';
 
 export default function AdminDashboardScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -249,7 +250,7 @@ export default function AdminDashboardScreen({ navigation }) {
         ))}
       </View>
 
-      {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} /> : (
+      {loading ? <PulseLoader message="Loading data..." /> : (
         tab === 'products' ? (
           <>
           <View style={styles.summaryRow}>
