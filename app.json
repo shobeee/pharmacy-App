@@ -20,10 +20,44 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "config": {
+        "usesCleartextTraffic": true
+      },
+      "package": "com.shobeee.PharmacyAppStable"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.pharmacyapp",
+          "enableGooglePay": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysPermission": "Allow $(PRODUCT_NAME) to access your location to fill your address.",
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to fill your address."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "43ce51a9-9a31-4b99-bc03-4814d127592d"
+      }
     }
   }
 }
