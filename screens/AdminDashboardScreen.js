@@ -15,6 +15,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [rewardAmount, setRewardAmount] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [productCount, setProductCount] = useState(0);
+  const [allOrders, setAllOrders] = useState([]);
 
   const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
 
@@ -57,6 +58,8 @@ export default function AdminDashboardScreen({ navigation }) {
             ...d.data(),
             hasNewMessage: !!d.data().hasNewMessage 
           }));
+          
+          setAllOrders(data);
           
           const filtered = tab === 'current' 
             ? data.filter(i => i.status !== 'Completed') 
@@ -152,6 +155,21 @@ export default function AdminDashboardScreen({ navigation }) {
             </TouchableOpacity>
           )} />
         ) : (
+          <>
+            <View style={styles.summaryRow}>
+              <View style={[styles.summaryCard, { backgroundColor: '#FFF3E0' }]}>
+                <Text style={styles.summaryLabel}>Pending Orders</Text>
+                <Text style={[styles.summaryValue, { color: '#E65100' }]}>{allOrders.filter(o => o.status !== 'Completed').length}</Text>
+              </View>
+              <View style={[styles.summaryCard, { backgroundColor: '#E3F2FD' }]}>
+                <Text style={styles.summaryLabel}>Pending Amount</Text>
+                <Text style={[styles.summaryValue, { color: '#1565C0' }]}>{CONFIG.CURRENCY} {allOrders.filter(o => o.status !== 'Completed').reduce((s, o) => s + Number(o.totalAmount || 0), 0).toFixed(2)}</Text>
+              </View>
+              <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
+                <Text style={styles.summaryLabel}>Amount Received</Text>
+                <Text style={[styles.summaryValue, { color: '#2E7D32' }]}>{CONFIG.CURRENCY} {allOrders.filter(o => o.status === 'Completed').reduce((s, o) => s + Number(o.totalAmount || 0), 0).toFixed(2)}</Text>
+              </View>
+            </View>
           <SwipeListView 
             data={orders} 
             extraData={orders}
@@ -188,6 +206,7 @@ export default function AdminDashboardScreen({ navigation }) {
             )} 
             rightOpenValue={-75} 
           />
+          </>
         )
       )}
       
@@ -215,6 +234,10 @@ const styles = StyleSheet.create({
   adminTitle: { color: '#FFF', fontSize: 24, fontWeight: '800' },
   subTitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 },
   changeCredText: { color: 'rgba(255,255,255,0.7)', marginTop: 10 },
+  summaryRow: { flexDirection: 'row', marginHorizontal: 15, marginBottom: 10, gap: 8 },
+  summaryCard: { flex: 1, padding: 12, borderRadius: 12, alignItems: 'center' },
+  summaryLabel: { fontSize: 10, fontWeight: '600', color: '#666', marginBottom: 4 },
+  summaryValue: { fontSize: 14, fontWeight: '800' },
   fab: { position: 'absolute', right: 20, top: 65, backgroundColor: '#FFF', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 25, elevation: 5, zIndex: 10 },
   fabText: { color: COLORS.primary, fontWeight: 'bold', fontSize: 13 },
   tabContainer: { flexDirection: 'row', margin: 15, backgroundColor: '#EEE', borderRadius: 10, padding: 4 },
