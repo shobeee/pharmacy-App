@@ -15,9 +15,6 @@ app.post("/create-payment-intent", async (req, res) => {
       return res.status(400).json({ error: "Invalid amount" });
     }
     currency = (currency || "pkr").toLowerCase();
-    // Stripe expects amount in smallest currency unit.
-    // PKR has 2 decimal places, so multiply by 100.
-    // If the amount is already in the smallest unit, don't multiply.
     amount = Math.round(amount * 100);
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -25,6 +22,35 @@ app.post("/create-payment-intent", async (req, res) => {
       automatic_payment_methods: { enabled: true },
     });
     res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/send-notification", async (req, res) => {
+  try {
+    const { pushToken, title, body, data } = req.body;
+    if (!pushToken) return res.status(400).json({ error: "Missing pushToken" });
+
+    const message = {
+      to: pushToken,
+      sound: "default",
+      title: title || "New Order",
+      body: body || "A new order needs your attention",
+      data: data || {},
+      priority: "high",
+      channelId: "order-ring",
+      _displayInForeground: true,
+    };
+
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(message),
+    });
+
+    const result = await response.json();
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
