@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, FlatList, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert, TextInput, Modal, FlatList, Image, Vibration } from 'react-native';
 import { collection, query, onSnapshot, deleteDoc, doc, updateDoc, increment, getDocs, where, orderBy, limit, getCountFromServer } from 'firebase/firestore';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { db } from '../firebaseConfig';
@@ -18,6 +18,42 @@ export default function AdminDashboardScreen({ navigation }) {
   const [allOrders, setAllOrders] = useState([]);
 
   const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
+  const [pendingAlarm, setPendingAlarm] = useState([]);
+
+  useEffect(() => {
+    const pending = allOrders.filter(o => o.status === 'Order Placed');
+    setPendingAlarm(pending);
+  }, [allOrders]);
+
+  useEffect(() => {
+    if (pendingAlarm.length > 0) {
+      Vibration.vibrate([1000, 500, 1000, 500, 1000, 500, 1000, 500], true);
+    } else {
+      Vibration.cancel();
+    }
+    return () => Vibration.cancel();
+  }, [pendingAlarm]);
+
+  const handleAcceptOrder = async (order) => {
+    try {
+      await updateDoc(doc(db, "Orders", order.id), { status: 'Confirmed' });
+    } catch (e) {
+      Alert.alert("Error", "Could not accept order.");
+    }
+  };
+
+  const handleDeclineOrder = async (order) => {
+    Alert.alert("Decline Order", `Decline order #${order.id?.slice(-8).toUpperCase()}?`, [
+      { text: "Cancel" },
+      { text: "Decline", style: "destructive", onPress: async () => {
+        try {
+          await updateDoc(doc(db, "Orders", order.id), { status: 'Cancelled' });
+        } catch (e) {
+          Alert.alert("Error", "Could not decline order.");
+        }
+      }}
+    ]);
+  };
 
   useEffect(() => {
     const fetchProductCount = async () => {
@@ -161,6 +197,45 @@ export default function AdminDashboardScreen({ navigation }) {
           <Text style={styles.earningValue}>{CONFIG.CURRENCY} {monthEarning.toFixed(2)}</Text>
         </View>
       </View>
+
+      {pendingAlarm.length > 0 && (
+        <View style={styles.incomingBanner}>
+          <View style={styles.incomingHeader}>
+            <View style={styles.incomingRingIcon}>
+              <Text style={styles.incomingRingEmoji}>🔔</Text>
+            </View>
+            <View style={styles.incomingHeaderText}>
+              <Text style={styles.incomingTitle}>New Order{pendingAlarm.length > 1 ? 's' : ''}!</Text>
+              <Text style={styles.incomingSub}>{pendingAlarm.length} order{pendingAlarm.length > 1 ? 's' : ''} pending acceptance</Text>
+            </View>
+          </View>
+          <FlatList
+            data={pendingAlarm}
+            keyExtractor={i => i.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 4, gap: 8 }}
+            renderItem={({ item }) => (
+              <View style={styles.incomingCard}>
+                <View style={styles.incomingCardTop}>
+                  <Text style={styles.incomingOrderId}>#{item.id?.slice(-8).toUpperCase()}</Text>
+                  <Text style={styles.incomingAmount}>{CONFIG.CURRENCY} {Number(item.totalAmount || 0).toFixed(2)}</Text>
+                </View>
+                <Text style={styles.incomingCustomer}>{item.customerName || 'Guest'}</Text>
+                <Text style={styles.incomingItems}>{item.items?.length || 0} item{(item.items?.length || 0) !== 1 ? 's' : ''}</Text>
+                <View style={styles.incomingActions}>
+                  <TouchableOpacity style={styles.incomingAccept} onPress={() => handleAcceptOrder(item)} activeOpacity={0.8}>
+                    <Text style={styles.incomingAcceptText}>✓ Accept</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.incomingDecline} onPress={() => handleDeclineOrder(item)} activeOpacity={0.8}>
+                    <Text style={styles.incomingDeclineText}>✕ Decline</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </View>
+      )}
       
       <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddItemScreen')}>
         <Text style={styles.fabText}>+ Add Product</Text>
@@ -376,6 +451,51 @@ export default function AdminDashboardScreen({ navigation }) {
 
 
 const styles = StyleSheet.create({
+  incomingBanner: {
+    backgroundColor: '#FFF3E0',
+    marginHorizontal: 12,
+    marginTop: 4,
+    marginBottom: 4,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+  },
+  incomingHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  incomingRingIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 10,
+  },
+  incomingRingEmoji: { fontSize: 18 },
+  incomingHeaderText: { flex: 1 },
+  incomingTitle: { fontSize: 16, fontWeight: '800', color: '#E65100' },
+  incomingSub: { fontSize: 12, color: '#BF360C', marginTop: 1 },
+  incomingCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 12,
+    width: 200,
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+  },
+  incomingCardTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  incomingOrderId: { fontSize: 11, fontWeight: '700', color: '#999' },
+  incomingAmount: { fontSize: 13, fontWeight: '800', color: '#E65100' },
+  incomingCustomer: { fontSize: 14, fontWeight: '700', color: '#222' },
+  incomingItems: { fontSize: 11, color: '#888', marginTop: 2, marginBottom: 8 },
+  incomingActions: { flexDirection: 'row', gap: 6 },
+  incomingAccept: {
+    flex: 1, paddingVertical: 8, borderRadius: 8,
+    backgroundColor: '#4CAF50', alignItems: 'center',
+  },
+  incomingAcceptText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
+  incomingDecline: {
+    flex: 1, paddingVertical: 8, borderRadius: 8,
+    backgroundColor: '#FF5252', alignItems: 'center',
+  },
+  incomingDeclineText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   adminHeader: { backgroundColor: COLORS.primary, padding: 30, paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between' },
   adminTitle: { color: '#FFF', fontSize: 24, fontWeight: '800' },
