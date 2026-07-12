@@ -1,27 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   StyleSheet, View, Text, TextInput, TouchableOpacity, Alert,
   ActivityIndicator, Image, ScrollView, KeyboardAvoidingView, Platform, Animated
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { COLORS } from '../theme';
 import { CONFIG } from '../config';
 
 const QUICK_CATEGORIES = ['Tablets', 'Syrups', 'Injections', 'Drops', 'Capsules', 'Ointments'];
 
-export default function AddItemScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [imageUri, setImageUri] = useState(null);
+export default function AddItemScreen({ navigation, route }) {
+  const editProduct = route?.params?.product;
+  const isEditing = !!editProduct;
+
+  const [name, setName] = useState(editProduct?.name || '');
+  const [price, setPrice] = useState(editProduct?.price?.toString() || '');
+  const [category, setCategory] = useState(editProduct?.category || '');
+  const [description, setDescription] = useState(editProduct?.description || '');
+  const [discount, setDiscount] = useState(editProduct?.discount?.toString() || '');
+  const [quantity, setQuantity] = useState(editProduct?.quantity?.toString() || '');
+  const [imageUri, setImageUri] = useState(editProduct?.imageUrl || null);
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(editProduct?.imageUrl ? 1 : 0)).current;
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -40,27 +44,36 @@ export default function AddItemScreen({ navigation }) {
     }
   };
 
-  const uploadItem = async () => {
+  const handleSubmit = async () => {
     if (!name || !price || !category || !imageUri) {
       return Alert.alert("Missing Fields", "Please complete all required fields and select an image.");
     }
     setLoading(true);
     try {
-      await addDoc(collection(db, "Products"), {
+      const productData = {
         name: name.trim(),
         price: parseFloat(price),
         category: category.trim(),
         description: description.trim(),
         discount: discount ? parseInt(discount) : null,
+        quantity: quantity ? parseInt(quantity) : null,
         imageUrl: imageUri,
-        createdAt: new Date().toISOString(),
         isActive: true,
-        isOutOfStock: false,
-      });
-      Alert.alert("Success", "Product added successfully!");
+        isOutOfStock: quantity && parseInt(quantity) <= 0 ? true : false,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (isEditing) {
+        await updateDoc(doc(db, "Products", editProduct.id), productData);
+        Alert.alert("Updated", "Product updated successfully!");
+      } else {
+        productData.createdAt = new Date().toISOString();
+        await addDoc(collection(db, "Products"), productData);
+        Alert.alert("Success", "Product added successfully!");
+      }
       navigation.goBack();
     } catch (e) {
-      Alert.alert("Upload Failed", e.message);
+      Alert.alert("Error", e.message);
     } finally {
       setLoading(false);
     }
@@ -72,8 +85,8 @@ export default function AddItemScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Product</Text>
-        <Text style={styles.subHeader}>List a new item in your pharmacy catalog</Text>
+        <Text style={styles.headerTitle}>{isEditing ? 'Edit Product' : 'Add Product'}</Text>
+        <Text style={styles.subHeader}>{isEditing ? 'Update product details' : 'List a new item in your pharmacy catalog'}</Text>
 
         <TouchableOpacity style={styles.imageBox} onPress={pickImage} activeOpacity={0.8}>
           {imageUri ? (
@@ -159,6 +172,18 @@ export default function AddItemScreen({ navigation }) {
             </View>
           </View>
 
+          <Text style={styles.inputLabel}>Stock Quantity</Text>
+          <TextInput
+            style={[styles.input, focusedField === 'quantity' && styles.inputFocused]}
+            placeholder="Leave empty to disable stock tracking"
+            placeholderTextColor="#B0B8B4"
+            keyboardType="number-pad"
+            value={quantity}
+            onChangeText={setQuantity}
+            onFocus={() => setFocusedField('quantity')}
+            onBlur={() => setFocusedField(null)}
+          />
+
           <Text style={styles.inputLabel}>Description</Text>
           <TextInput
             style={[styles.input, styles.textArea, focusedField === 'description' && styles.inputFocused]}
@@ -175,7 +200,7 @@ export default function AddItemScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.submitButton, loading && { opacity: 0.7 }]}
-          onPress={uploadItem}
+          onPress={handleSubmit}
           disabled={loading}
           activeOpacity={0.9}
         >
@@ -183,7 +208,7 @@ export default function AddItemScreen({ navigation }) {
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
-              <Text style={styles.submitButtonText}>Publish Product</Text>
+              <Text style={styles.submitButtonText}>{isEditing ? 'Update Product' : 'Publish Product'}</Text>
               <Text style={styles.submitArrow}>→</Text>
             </>
           )}

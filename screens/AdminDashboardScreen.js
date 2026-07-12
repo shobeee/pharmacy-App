@@ -20,6 +20,7 @@ export default function AdminDashboardScreen({ navigation }) {
 
   const STATUS_STEPS = ['Order Placed', 'Confirmed', 'Processing', 'Out for Delivery', 'Completed'];
   const [pendingAlarm, setPendingAlarm] = useState([]);
+  const [dismissedLowStock, setDismissedLowStock] = useState([]);
 
   useEffect(() => {
     const pending = allOrders.filter(o => o.status === 'Order Placed');
@@ -237,6 +238,43 @@ export default function AdminDashboardScreen({ navigation }) {
           />
         </View>
       )}
+
+      {(() => {
+        const lowStock = products.filter(p => p.quantity != null && p.quantity <= 5 && !dismissedLowStock.includes(p.id));
+        if (lowStock.length === 0) return null;
+        return (
+          <View style={styles.lowStockBanner}>
+            <View style={styles.lowStockTop}>
+              <View style={styles.lowStockLeft}>
+                <Text style={styles.lowStockIcon}>⚠️</Text>
+                <View>
+                  <Text style={styles.lowStockTitle}>Low Stock Alert</Text>
+                  <Text style={styles.lowStockSub}>{lowStock.length} product{lowStock.length > 1 ? 's' : ''} running low</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setDismissedLowStock(prev => [...prev, ...lowStock.map(p => p.id)])}>
+                <Text style={styles.lowStockDismiss}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={lowStock}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, marginTop: 8 }}
+              keyExtractor={i => i.id}
+              renderItem={({ item }) => (
+                <View style={styles.lowStockCard}>
+                  <Text style={styles.lowStockName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.lowStockQty}>Qty: {item.quantity}</Text>
+                  <TouchableOpacity style={styles.lowStockEditBtn} onPress={() => navigation.navigate('AddItemScreen', { product: item })}>
+                    <Text style={styles.lowStockEditText}>Restock</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+          </View>
+        );
+      })()}
       
       <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddItemScreen')}>
         <Text style={styles.fabText}>+ Add Product</Text>
@@ -268,14 +306,22 @@ export default function AdminDashboardScreen({ navigation }) {
             </View>
           </View>
           <FlatList data={products} keyExtractor={(i) => i.id} contentContainerStyle={{ paddingBottom: 20 }} renderItem={({ item }) => (
-            <View style={styles.productCard}>
+            <TouchableOpacity style={styles.productCard} onPress={() => navigation.navigate('AddItemScreen', { product: item })} activeOpacity={0.7}>
               <Image source={{ uri: item.imageUrl }} style={styles.productCardImg} />
               <View style={styles.productCardInfo}>
                 <Text style={styles.productCardName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.productCardCategory}>{item.category}</Text>
                 <Text style={styles.productCardPrice}>{CONFIG.CURRENCY} {Number(item.price || 0).toFixed(2)}</Text>
+                {item.quantity != null && (
+                  <Text style={[styles.productCardQty, { color: item.quantity <= 5 ? '#D32F2F' : '#66BB6A' }]}>
+                    Stock: {item.quantity}
+                  </Text>
+                )}
               </View>
               <View style={styles.productCardActions}>
+                <TouchableOpacity style={styles.editIconBtn} onPress={() => navigation.navigate('AddItemScreen', { product: item })}>
+                  <Text style={styles.editIconText}>✎</Text>
+                </TouchableOpacity>
                 <View style={[styles.stockDot, { backgroundColor: item.isOutOfStock ? '#EF5350' : '#66BB6A' }]} />
                 <TouchableOpacity
                   style={[styles.stockToggleBtn, { backgroundColor: item.isOutOfStock ? '#4CAF50' : '#EF5350' }]}
@@ -284,7 +330,7 @@ export default function AdminDashboardScreen({ navigation }) {
                   <Text style={styles.stockToggleText}>{item.isOutOfStock ? 'In' : 'Out'}</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </TouchableOpacity>
           )} />
           </>
         ) : tab === 'users' ? (
@@ -497,6 +543,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5252', alignItems: 'center',
   },
   incomingDeclineText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
+  lowStockBanner: {
+    backgroundColor: '#FFF3E0', marginHorizontal: 12, marginTop: 4, marginBottom: 4,
+    borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#FF9800',
+  },
+  lowStockTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  lowStockLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  lowStockIcon: { fontSize: 20, marginRight: 10 },
+  lowStockTitle: { fontSize: 15, fontWeight: '800', color: '#E65100' },
+  lowStockSub: { fontSize: 11, color: '#BF360C', marginTop: 1 },
+  lowStockDismiss: { fontSize: 18, color: '#999', padding: 4 },
+  lowStockCard: {
+    backgroundColor: '#FFF', borderRadius: 10, padding: 10, width: 150,
+    borderWidth: 1, borderColor: '#FFCDD2',
+  },
+  lowStockName: { fontSize: 13, fontWeight: '700', color: '#333' },
+  lowStockQty: { fontSize: 12, color: '#D32F2F', fontWeight: '700', marginTop: 4 },
+  lowStockEditBtn: { marginTop: 8, backgroundColor: '#D32F2F', borderRadius: 6, paddingVertical: 6, alignItems: 'center' },
+  lowStockEditText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
+  productCardQty: { fontSize: 11, fontWeight: '700', marginTop: 3 },
+  editIconBtn: { padding: 6, marginBottom: 4 },
+  editIconText: { fontSize: 16, color: COLORS.primary, fontWeight: '700' },
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   adminHeader: { backgroundColor: COLORS.primary, padding: 30, paddingTop: 60, flexDirection: 'row', justifyContent: 'space-between' },
   adminTitle: { color: '#FFF', fontSize: 24, fontWeight: '800' },
