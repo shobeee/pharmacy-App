@@ -129,28 +129,79 @@ export default function AdminDashboardScreen({ navigation }) {
 
       {loading ? <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} /> : (
         tab === 'products' ? (
-          <FlatList data={products} keyExtractor={(i) => i.id} renderItem={({ item }) => (
-            <View style={[styles.userCard, item.isOutOfStock && { backgroundColor: '#EEE' }]}>
-              <Image source={{ uri: item.imageUrl }} style={{ width: 50, height: 50, borderRadius: 8 }} />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.userName}>{item.name}</Text>
-                <Text style={{ fontSize: 12, color: item.isOutOfStock ? 'red' : 'green' }}>{item.isOutOfStock ? 'Out of Stock' : 'In Stock'}</Text>
+          <>
+          <View style={styles.summaryRow}>
+            <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
+              <Text style={styles.summaryLabel}>Total Products</Text>
+              <Text style={[styles.summaryValue, { color: '#2E7D32' }]}>{products.length}</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: '#FFF3E0' }]}>
+              <Text style={styles.summaryLabel}>In Stock</Text>
+              <Text style={[styles.summaryValue, { color: '#E65100' }]}>{products.filter(p => !p.isOutOfStock).length}</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: '#FFEBEE' }]}>
+              <Text style={styles.summaryLabel}>Out of Stock</Text>
+              <Text style={[styles.summaryValue, { color: '#C62828' }]}>{products.filter(p => p.isOutOfStock).length}</Text>
+            </View>
+          </View>
+          <FlatList data={products} keyExtractor={(i) => i.id} contentContainerStyle={{ paddingBottom: 20 }} renderItem={({ item }) => (
+            <View style={styles.productCard}>
+              <Image source={{ uri: item.imageUrl }} style={styles.productCardImg} />
+              <View style={styles.productCardInfo}>
+                <Text style={styles.productCardName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.productCardCategory}>{item.category}</Text>
+                <Text style={styles.productCardPrice}>{CONFIG.CURRENCY} {Number(item.price || 0).toFixed(2)}</Text>
               </View>
-              <TouchableOpacity style={[styles.rewardBtn, { backgroundColor: item.isOutOfStock ? '#4CAF50' : '#F44336' }]} onPress={() => toggleStockStatus(item.id, item.isOutOfStock)}>
-                <Text style={styles.rewardBtnText}>{item.isOutOfStock ? 'Mark In' : 'Mark Out'}</Text>
-              </TouchableOpacity>
+              <View style={styles.productCardActions}>
+                <View style={[styles.stockDot, { backgroundColor: item.isOutOfStock ? '#EF5350' : '#66BB6A' }]} />
+                <TouchableOpacity
+                  style={[styles.stockToggleBtn, { backgroundColor: item.isOutOfStock ? '#4CAF50' : '#EF5350' }]}
+                  onPress={() => toggleStockStatus(item.id, item.isOutOfStock)}
+                >
+                  <Text style={styles.stockToggleText}>{item.isOutOfStock ? 'In' : 'Out'}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )} />
         ) : tab === 'users' ? (
-          <FlatList data={users} keyExtractor={(i) => i.id} renderItem={({ item }) => (
-            <TouchableOpacity style={styles.userCard} onPress={() => navigation.navigate('AdminUserDetails', { userId: item.id })}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.userName}>{item.name || 'Anonymous User'}</Text>
-                <Text style={styles.userIdText}>ID: {item.uniqueId || item.id?.slice(0, 8).toUpperCase()}</Text>
-                <Text style={styles.badge}>Rewards: {item.loyaltyRewards || 0} LR</Text>
+          <>
+          <View style={styles.summaryRow}>
+            <View style={[styles.summaryCard, { backgroundColor: '#E3F2FD' }]}>
+              <Text style={styles.summaryLabel}>Total Users</Text>
+              <Text style={[styles.summaryValue, { color: '#1565C0' }]}>{users.length}</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: '#F3E5F5' }]}>
+              <Text style={styles.summaryLabel}>With Rewards</Text>
+              <Text style={[styles.summaryValue, { color: '#7B1FA2' }]}>{users.filter(u => (u.loyaltyRewards || 0) > 0).length}</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
+              <Text style={styles.summaryLabel}>Total Rewards</Text>
+              <Text style={[styles.summaryValue, { color: '#2E7D32' }]}>{CONFIG.CURRENCY} {users.reduce((s, u) => s + (u.loyaltyRewards || 0), 0).toFixed(2)}</Text>
+            </View>
+          </View>
+          <FlatList data={users} keyExtractor={(i) => i.id} contentContainerStyle={{ paddingBottom: 20 }} renderItem={({ item }) => (
+            <TouchableOpacity style={styles.userCardNew} onPress={() => navigation.navigate('AdminUserDetails', { userId: item.id })} activeOpacity={0.7}>
+              <View style={styles.userAvatarWrap}>
+                <View style={styles.userAvatar}>
+                  <Text style={styles.userAvatarText}>{item.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+                </View>
               </View>
-              <TouchableOpacity style={styles.rewardBtn} onPress={() => setSelectedUser(item)}>
-                <Text style={styles.rewardBtnText}>+ Grant</Text>
+              <View style={styles.userInfo}>
+                <Text style={styles.userInfoName}>{item.name || 'Anonymous User'}</Text>
+                {item.email && <Text style={styles.userInfoEmail}>{item.email}</Text>}
+                <View style={styles.userMetaRow}>
+                  <Text style={styles.userMetaText}>ID: {item.uniqueId || item.id?.slice(0, 8).toUpperCase()}</Text>
+                  <Text style={styles.userMetaDivider}>|</Text>
+                  <Text style={styles.userMetaText}>{item.loyaltyRewards || 0} LR</Text>
+                </View>
+                {item.lastOrder && (
+                  <Text style={styles.userLastOrder}>
+                    Last order: {CONFIG.CURRENCY} {Number(item.lastOrder.totalAmount || 0).toFixed(2)}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity style={styles.grantBtn} onPress={() => setSelectedUser(item)}>
+                <Text style={styles.grantBtnText}>+</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           )} />
@@ -309,6 +360,29 @@ const styles = StyleSheet.create({
   price: { fontWeight: 'bold', fontSize: 15, marginTop: 5 },
   proceedBtn: { marginTop: 10, backgroundColor: COLORS.primary, padding: 8, borderRadius: 8, alignItems: 'center' },
   proceedBtnText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  productCard: { backgroundColor: '#FFF', marginHorizontal: 15, marginBottom: 10, borderRadius: 14, padding: 12, elevation: 1, flexDirection: 'row', alignItems: 'center' },
+  productCardImg: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#F0F2F1' },
+  productCardInfo: { flex: 1, marginLeft: 12 },
+  productCardName: { fontSize: 14, fontWeight: '700', color: '#222' },
+  productCardCategory: { fontSize: 11, color: '#888', marginTop: 1 },
+  productCardPrice: { fontSize: 13, fontWeight: '800', color: COLORS.primary, marginTop: 3 },
+  productCardActions: { alignItems: 'center', gap: 6 },
+  stockDot: { width: 8, height: 8, borderRadius: 4 },
+  stockToggleBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 },
+  stockToggleText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
+  userCardNew: { backgroundColor: '#FFF', marginHorizontal: 15, marginBottom: 10, borderRadius: 14, padding: 14, elevation: 1, flexDirection: 'row', alignItems: 'center' },
+  userAvatarWrap: { marginRight: 14 },
+  userAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
+  userAvatarText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
+  userInfo: { flex: 1 },
+  userInfoName: { fontSize: 15, fontWeight: '700', color: '#222' },
+  userInfoEmail: { fontSize: 12, color: '#888', marginTop: 1 },
+  userMetaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 },
+  userMetaText: { fontSize: 11, color: COLORS.primary, fontWeight: '600' },
+  userMetaDivider: { fontSize: 11, color: '#DDD' },
+  userLastOrder: { fontSize: 11, color: '#999', marginTop: 3, fontStyle: 'italic' },
+  grantBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(46,125,50,0.1)', justifyContent: 'center', alignItems: 'center', marginLeft: 8 },
+  grantBtnText: { fontSize: 20, color: COLORS.primary, fontWeight: '700', lineHeight: 22 },
   historyCard: { backgroundColor: '#FFF', marginHorizontal: 15, marginBottom: 10, borderRadius: 14, padding: 16, elevation: 1, borderLeftWidth: 4, borderLeftColor: '#4CAF50' },
   historyTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   historyIdRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
